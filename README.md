@@ -61,6 +61,28 @@ Install the `humanize` Claude Code plugin from the Claude Code plugin UI:
 /plugin install humanize@PolyArch
 ```
 
+## Running the flow on pi (this fork)
+
+Upstream runs the flow in Claude Code with the Humanize plugin, whose implement-and-review loop (RLCR) needs
+Claude Code / Codex Stop hooks. This fork adds `scripts/kda_pi.py`, which drives the same flow on
+[pi](https://github.com/badlogic/pi-mono) with any two models and nobody at the keyboard:
+
+```bash
+python scripts/kda_pi.py --workspace <task workspace> --contract contract.json --hours 4 \
+    --model <provider/id of the implementer> --reviewer-model <provider/id of the reviewer> \
+    --eval-cmd "bash evaluate.sh" --skill skills/KernelWiki --skill skills/ncu-report-skill
+```
+
+- `contract.json` holds the task contract of `prompts/basic-flow.md` (`name`, `objective`, `correctness`, `target`,
+  `approaches`, `validation`, `evaluation`, `promotion`).
+- The phases are draft (`docs/draft.md`), plan (`docs/plan.md`), then rounds of implementer turn + independent
+  reviewer turn until the reviewer writes `COMPLETE`, 42 rounds, or the time budget.
+- Not carried over from Humanize: the plan quiz and the questions to the user, the branch and push checks, the
+  finalize phase. Skills are opt-in (`--skill`); without any, the agents work from the workspace alone.
+- `.kda/` in the workspace has the per-turn token and time log (`usage.jsonl`), the driver's own evaluation of
+  every round (`evals.jsonl`), and the best correct deliverable with the time it was reached (`best/`,
+  `snapshots.jsonl`).
+
 ## Minimal Flow
 
 1. Create a separate implementation workspace for the target task.
